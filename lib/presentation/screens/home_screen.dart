@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pet_perfect/core/boxes.dart';
 import 'package:pet_perfect/core/di.dart';
+import 'package:pet_perfect/domain/entities/random_file_entity.dart';
 import 'package:pet_perfect/presentation/bloc/random_file_bloc/random_file_bloc.dart';
 import 'package:pet_perfect/presentation/screens/posts_screen.dart';
 import 'package:video_player/video_player.dart';
@@ -21,6 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final RandomFileBloc _randomFileBloc = injector<RandomFileBloc>();
   late VideoPlayerController _controller;
   Future<void>? _video;
+
+  @override
+  void dispose() {
+    Hive.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Icon(Icons.error),
                         fit: BoxFit.cover,
                       );
-
-                      // Image(
-                      //   image: NetworkImage(state.randomFileEntity.url),
-                      //   fit: BoxFit.cover,
-                      //   errorBuilder: (b, o, s) {
-                      //     return const Center(
-                      //       child: Icon(Icons.error),
-                      //     );
-                      //   },
-                      // );
                     }
                   }),
                 ),
@@ -112,6 +111,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: FloatingActionButton(
                 onPressed: () {
                   //SAVE THE FILE INTO HIVE
+                  if (state is RandomFileSuccess) {
+                    final randomFile = RandomFileEntity(
+                      fileSizeBytes: state.randomFileEntity.fileSizeBytes,
+                      url: state.randomFileEntity.url,
+                    );
+
+                    final box = Boxes.saveFile();
+                    box.add(randomFile);
+                  }
                   // GO TO POSTS SCREEN
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
                     return const PostsScreen();
